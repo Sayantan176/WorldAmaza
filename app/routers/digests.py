@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Request, Depends, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User, Digest, Notification
 from app.services.digest_service import digest_service
+from app.templates import templates
 
 router = APIRouter(tags=["Digests"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/digests", response_class=HTMLResponse)

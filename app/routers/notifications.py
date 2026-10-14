@@ -1,14 +1,13 @@
 from typing import Optional
 from fastapi import APIRouter, Request, Depends, Form, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User, Notification, Event, Watch, EventArticle, Article, Feedback
+from app.templates import templates
 
 router = APIRouter(tags=["Notifications"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/notifications", response_class=HTMLResponse)

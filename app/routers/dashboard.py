@@ -1,13 +1,12 @@
 from fastapi import APIRouter, Request, Depends, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user, get_current_user_optional
 from app.models import User, Watch, Notification, Event
+from app.templates import templates
 
 router = APIRouter(tags=["Dashboard"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/", response_class=HTMLResponse)

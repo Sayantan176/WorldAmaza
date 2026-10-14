@@ -1,14 +1,13 @@
 from typing import Optional
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User, Event, EventArticle, Article, WatchMatch, Watch, Notification
+from app.templates import templates
 
 router = APIRouter(tags=["History"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/history", response_class=HTMLResponse)

@@ -1,3 +1,4 @@
+import os
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -25,6 +26,12 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 logger = logging.getLogger("worldamaze")
+
+# Ensure database tables exist immediately on module import (critical for WSGI servers)
+try:
+    init_db()
+except Exception as e:
+    logger.warning(f"Notice during startup init_db: {e}")
 
 
 @asynccontextmanager
@@ -57,8 +64,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# Mount static files using absolute directory path
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(APP_DIR, "static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Health Check Endpoint
 @app.get("/health", tags=["Health"])

@@ -3,7 +3,6 @@ import logging
 from typing import Optional
 from fastapi import APIRouter, Request, Depends, Form, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
@@ -11,10 +10,10 @@ from app.models import User, Watch, Event, WatchMatch, Feedback, Notification
 from app.schemas.watch import StructuredWatchRules
 from app.services.watch_parser import parse_watch_prompt
 from app.jobs.monitoring_job import run_watch_monitoring
+from app.templates import templates
 
 logger = logging.getLogger("worldamaze.watches_router")
 router = APIRouter(tags=["Watches"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/watches", response_class=HTMLResponse)
