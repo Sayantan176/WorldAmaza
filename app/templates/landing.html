@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}WorldAmaze — Personal Global Intelligence Monitoring{% endblock %}
+
+{% block content %}
+<div class="py-12 px-4 sm:px-6 lg:px-8">
+    <!-- Navigation header -->
+    <div class="flex items-center justify-between pb-12 border-b border-slate-200">
+        <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded bg-slate-900 flex items-center justify-center text-white font-bold text-sm tracking-wider">
+                W
+            </div>
+            <span class="font-bold text-xl tracking-tight text-slate-900">WorldAmaze</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="/login" class="text-sm font-medium text-slate-600 hover:text-slate-900">Sign in</a>
+            <a href="/register" class="inline-flex items-center justify-center px-4 py-2 border border-slate-900 text-sm font-medium rounded-md text-white bg-slate-900 hover:bg-slate-800 transition-colors shadow-sm">
+                Start monitoring
+            </a>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="py-16 text-center max-w-3xl mx-auto">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            The world moves.<br>We'll keep watch.
+        </h1>
+        <p class="mt-6 text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto">
+            A personal, rule-driven global intelligence monitoring platform. Describe what you want to follow in natural language. WorldAmaze tracks news sources, filters out noise, detects duplicates, and alerts you only when significant developments occur.
+        </p>
+        <div class="mt-8 flex justify-center gap-4">
+            <a href="/register" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                Start monitoring
+            </a>
+            <a href="#how-it-works" class="inline-flex items-center justify-center px-6 py-3 border border-slate-300 text-base font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 transition-colors">
+                See how it works
+            </a>
+        </div>
+    </div>
+
+    <!-- Capability Cards -->
+    <div class="py-12 border-t border-slate-200">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                <div class="w-10 h-10 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+                    <i data-lucide="crosshair" class="w-5 h-5"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 mb-2">Precise Watches</h3>
+                <p class="text-sm text-slate-600 leading-relaxed">
+                    Set granular conditions in natural language. We distinguish confirmed milestones from speculation, rumors, and routine editorial commentary.
+                </p>
+            </div>
+            <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                <div class="w-10 h-10 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                    <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 mb-2">Meaningful Alerts</h3>
+                <p class="text-sm text-slate-600 leading-relaxed">
+                    Receive immediate notifications for high-importance triggers, or bundle minor developments into curated daily and weekly digests.
+                </p>
+            </div>
+            <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                <div class="w-10 h-10 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+                    <i data-lucide="shield-check" class="w-5 h-5"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 mb-2">Source-Backed Updates</h3>
+                <p class="text-sm text-slate-600 leading-relaxed">
+                    Every generated summary is strictly grounded in retrieved source reporting, complete with publication timestamps and primary source citations.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Illustrative Workflow -->
+    <div id="how-it-works" class="py-16 border-t border-slate-200">
+        <div class="text-center max-w-xl mx-auto mb-12">
+            <h2 class="text-2xl font-bold text-slate-900">How WorldAmaze Works</h2>
+            <p class="mt-2 text-sm text-slate-600">From plain English description to continuous background surveillance.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="p-5 bg-white border border-slate-200 rounded-lg">
+                <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Step 1</span>
+                <h4 class="text-base font-semibold text-slate-900 mt-2 mb-1">Describe Your Watch</h4>
+                <p class="text-xs text-slate-600">Type what matters to you in plain English, including what to track and what noise to ignore.</p>
+            </div>
+            <div class="p-5 bg-white border border-slate-200 rounded-lg">
+                <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Step 2</span>
+                <h4 class="text-base font-semibold text-slate-900 mt-2 mb-1">AI Rule Synthesis</h4>
+                <p class="text-xs text-slate-600">Groq GPT-OSS 120B converts your intent into structured, auditable parameters you can review and edit.</p>
+            </div>
+            <div class="p-5 bg-white border border-slate-200 rounded-lg">
+                <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Step 3</span>
+                <h4 class="text-base font-semibold text-slate-900 mt-2 mb-1">Continuous Monitoring</h4>
+                <p class="text-xs text-slate-600">GNews and RSS feeds are polled periodically. Stories are deduplicated and verified against evidence policies.</p>
+            </div>
+            <div class="p-5 bg-white border border-slate-200 rounded-lg">
+                <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Step 4</span>
+                <h4 class="text-base font-semibold text-slate-900 mt-2 mb-1">Alerts & Digests</h4>
+                <p class="text-xs text-slate-600">Get clean in-app notifications and verified emails via Resend according to your schedule.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="pt-12 pb-8 border-t border-slate-200 text-center text-xs text-slate-500">
+        <p>© 2026 WorldAmaze. All rights reserved. Personal Global Intelligence Monitoring Platform.</p>
+    </div>
+</div>
+{% endblock %}

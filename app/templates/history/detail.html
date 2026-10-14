@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.headline }} — WorldAmaze Intelligence Dossier{% endblock %}
+{% block header_title %}Event Dossier{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-4xl">
+    
+    <!-- Navigation Back -->
+    <div>
+        <a href="/history" class="text-xs text-slate-500 hover:text-slate-800 flex items-center mb-3">
+            <i data-lucide="chevron-left" class="w-4 h-4 mr-0.5"></i>
+            Back to Event History
+        </a>
+        
+        <div class="flex flex-wrap items-center gap-2 mb-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold {% if event.importance in ('critical', 'high') %}bg-red-50 text-red-700 border border-red-200{% else %}bg-slate-100 text-slate-700{% endif %}">
+                {{ event.importance.upper() }} IMPORTANCE
+            </span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold {% if event.evidence_status == 'official_confirmed' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
+                {{ event.evidence_status.replace('_', ' ').upper() }}
+            </span>
+            <span class="text-xs text-slate-400 capitalize">• Category: {{ event.event_category }}</span>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">
+            {{ event.headline }}
+        </h1>
+    </div>
+
+    <!-- Timeline & Detection Details -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">First Detected by WorldAmaze</span>
+            <p class="text-sm font-semibold text-slate-800 mt-1">
+                {{ event.first_detected_at.strftime('%B %d, %Y at %H:%M UTC') }}
+            </p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Recorded by automated scheduled pipeline</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Primary Article Publication Time</span>
+            <p class="text-sm font-semibold text-slate-800 mt-1">
+                {% if primary_article and primary_article.published_at %}
+                {{ primary_article.published_at.strftime('%B %d, %Y at %H:%M UTC') }}
+                {% else %}
+                Publication time unstated by source
+                {% endif %}
+            </p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Reported by {{ primary_article.source_name if primary_article else 'External Source' }}</p>
+        </div>
+    </div>
+
+    <!-- What Changed Box -->
+    <div class="bg-blue-50 border-l-4 border-blue-600 rounded-r-lg p-5">
+        <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider mb-1">What Changed</h3>
+        <p class="text-sm text-blue-950 font-medium leading-relaxed">
+            {{ event.what_changed or event.summary }}
+        </p>
+    </div>
+
+    <!-- Grounded Executive Summary -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">Executive Summary</h3>
+        <p class="text-sm text-slate-700 leading-relaxed">
+            {{ event.summary }}
+        </p>
+
+        <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
+            <strong>Evidence Assessment:</strong>
+            {% if event.evidence_status == 'official_confirmed' %}
+            Officially confirmed by governmental or corporate entity. Meets strict verification requirements.
+            {% elif event.evidence_status == 'multiple_sources' %}
+            Corroborated by multiple independent reporting outlets. High confidence in factual occurrence.
+            {% elif event.evidence_status == 'single_report' %}
+            Reported by a single outlet. Awaiting independent cross-verification.
+            {% else %}
+            Categorized as speculative commentary or unverified claim. Not officially confirmed.
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Matched Watch & Rationale -->
+    {% if matches and matches|length > 0 %}
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">Why this Matched Your Watch Rules</h3>
+        <div class="space-y-3">
+            {% for m in matches %}
+            <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-md text-xs">
+                <div class="font-bold text-slate-800 mb-1">
+                    Watch: <a href="/watches/{{ m.watch_id }}" class="text-blue-600 hover:underline">{{ m.watch.title }}</a>
+                </div>
+                <p class="text-slate-600 leading-relaxed">{{ m.match_rationale }}</p>
+                <div class="mt-2 text-slate-400 font-mono text-[11px]">
+                    Relevance Score: {{ "%.2f"|format(m.relevance_score) }} • Pipeline Decision: {{ m.decision }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Supporting Source Articles -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center">
+            <i data-lucide="newspaper" class="w-4 h-4 mr-2 text-slate-600"></i>
+            Supporting Source Articles ({{ supporting_articles|length }})
+        </h3>
+
+        {% if supporting_articles and supporting_articles|length > 0 %}
+        <div class="divide-y divide-slate-100">
+            {% for art in supporting_articles %}
+            <div class="py-3.5 first:pt-0 last:pb-0">
+                <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+                    <span class="font-semibold text-slate-700">{{ art.source_name }}</span>
+                    <span>{{ art.published_at.strftime('%b %d, %Y') if art.published_at else 'Date unstated' }}</span>
+                </div>
+                <h4 class="text-sm font-bold text-slate-900">
+                    <a href="{{ art.canonical_url }}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600 flex items-center">
+                        {{ art.title }}
+                        <i data-lucide="external-link" class="w-3.5 h-3.5 ml-1 text-slate-400"></i>
+                    </a>
+                </h4>
+                {% if art.snippet %}
+                <p class="text-xs text-slate-600 mt-1 line-clamp-2">{{ art.snippet }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-xs text-slate-500">No external source links stored for this event.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

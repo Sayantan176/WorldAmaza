@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Settings — WorldAmaze{% endblock %}
+{% block header_title %}Account & Engine Settings{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-4xl">
+    
+    <!-- Top Header -->
+    <div class="pb-4 border-b border-slate-200">
+        <h2 class="text-xl font-bold tracking-tight text-slate-900">Workspace Settings</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Manage your notification channels, schedule preferences, and view platform integrations.</p>
+    </div>
+
+    {% if message %}
+    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-800">
+        {{ message }}
+    </div>
+    {% endif %}
+
+    <!-- 1. User Profile Settings -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center">
+            <i data-lucide="user" class="w-4 h-4 mr-2 text-blue-600"></i>
+            User Profile & Timezone
+        </h3>
+
+        <form action="/settings/profile" method="POST" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+                    <input type="text" name="full_name" value="{{ current_user.full_name or '' }}" placeholder="Intelligence Analyst"
+                           class="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+                    <input type="email" value="{{ current_user.email }}" disabled
+                           class="w-full text-xs px-3 py-2 border border-slate-200 rounded bg-slate-50 text-slate-500 cursor-not-allowed">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Display Timezone</label>
+                <select name="timezone" class="w-full sm:w-1/2 text-xs px-3 py-2 border border-slate-300 rounded bg-white">
+                    {% for tz in ['UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles', 'Europe/London', 'Europe/Paris', 'Asia/Kolkata', 'Asia/Singapore', 'Asia/Tokyo'] %}
+                    <option value="{{ tz }}" {% if current_user.timezone == tz %}selected{% endif %}>{{ tz }}</option>
+                    {% endfor %}
+                </select>
+                <p class="text-[11px] text-slate-500 mt-1">Controls how timestamps and scheduled digests are delivered.</p>
+            </div>
+
+            <div class="pt-2">
+                <button type="submit" class="px-4 py-2 bg-slate-900 text-xs font-semibold text-white rounded hover:bg-slate-800 transition-colors">
+                    Save Profile
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 2. Email Notification Preferences -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center">
+            <i data-lucide="mail" class="w-4 h-4 mr-2 text-indigo-600"></i>
+            Email Delivery & Digest Settings
+        </h3>
+
+        <form action="/settings/notifications" method="POST" class="space-y-5">
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="email_notifications_enabled" name="email_notifications_enabled" type="checkbox" value="true"
+                           {% if current_user.email_notifications_enabled %}checked{% endif %}
+                           class="h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                </div>
+                <div class="ml-3 text-xs">
+                    <label for="email_notifications_enabled" class="font-bold text-slate-800">Enable Email Delivery via Resend</label>
+                    <p class="text-slate-500">Send immediate verified alerts and scheduled digests directly to {{ current_user.email }}. In-app notifications are always preserved.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Digest Frequency</label>
+                    <select name="digest_frequency" class="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="daily" {% if current_user.digest_frequency == 'daily' %}selected{% endif %}>Daily Intelligence Briefing</option>
+                        <option value="weekly" {% if current_user.digest_frequency == 'weekly' %}selected{% endif %}>Weekly Intelligence Summary</option>
+                        <option value="none" {% if current_user.digest_frequency == 'none' %}selected{% endif %}>None (In-App Only)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Target Digest Delivery Time</label>
+                    <input type="text" name="digest_time" value="{{ current_user.digest_time or '08:00' }}" placeholder="08:00"
+                           class="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white">
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button type="submit" class="px-4 py-2 bg-slate-900 text-xs font-semibold text-white rounded hover:bg-slate-800 transition-colors">
+                    Save Notification Preferences
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 3. System Integrations Diagnostic Panel -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center">
+            <i data-lucide="cpu" class="w-4 h-4 mr-2 text-emerald-600"></i>
+            Engine & Integrations Status
+        </h3>
+        <p class="text-xs text-slate-500 mb-5">Operational diagnostics. Credentials remain secure on the server.</p>
+
+        <div class="space-y-3 text-xs">
+            <!-- Groq -->
+            <div class="flex items-center justify-between p-3 rounded bg-slate-50 border border-slate-200">
+                <div>
+                    <span class="font-bold text-slate-800">Groq LLM Engine</span>
+                    <p class="text-slate-500 text-[11px]">Model: <code class="bg-slate-200 px-1 py-0.5 rounded text-slate-800">{{ config_status.groq_model }}</code></p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold {% if config_status.groq_configured %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-red-50 text-red-700{% endif %}">
+                    {% if config_status.groq_configured %}Connected & Verified{% else %}Missing Key{% endif %}
+                </span>
+            </div>
+
+            <!-- GNews -->
+            <div class="flex items-center justify-between p-3 rounded bg-slate-50 border border-slate-200">
+                <div>
+                    <span class="font-bold text-slate-800">GNews Discovery API</span>
+                    <p class="text-slate-500 text-[11px]">Global real-time article search endpoint</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold {% if config_status.gnews_configured %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-red-50 text-red-700{% endif %}">
+                    {% if config_status.gnews_configured %}Connected & Active{% else %}Missing Key{% endif %}
+                </span>
+            </div>
+
+            <!-- RSS Ingestion -->
+            <div class="flex items-center justify-between p-3 rounded bg-slate-50 border border-slate-200">
+                <div>
+                    <span class="font-bold text-slate-800">RSS / Atom Feeds Adapter</span>
+                    <p class="text-slate-500 text-[11px]">Independent fallback source (BBC, NPR, Defense News, Ars Technica, etc.)</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Always Online
+                </span>
+            </div>
+
+            <!-- Supabase -->
+            <div class="flex items-center justify-between p-3 rounded bg-slate-50 border border-slate-200">
+                <div>
+                    <span class="font-bold text-slate-800">Supabase Auth & Database</span>
+                    <p class="text-slate-500 text-[11px]">URL & Publishable Client Key configured. Storage mode: {{ config_status.database_type.upper() }}</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold {% if config_status.supabase_configured %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-amber-50 text-amber-700{% endif %}">
+                    {% if config_status.supabase_configured %}Connected{% else %}Pending{% endif %}
+                </span>
+            </div>
+
+            <!-- Resend -->
+            <div class="flex items-center justify-between p-3 rounded bg-slate-50 border border-slate-200">
+                <div>
+                    <span class="font-bold text-slate-800">Resend Email Gateway</span>
+                    <p class="text-slate-500 text-[11px]">Sender: <code class="bg-slate-200 px-1 py-0.5 rounded text-slate-800">{{ config_status.resend_from_email }}</code></p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold {% if config_status.resend_configured %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-amber-50 text-amber-700{% endif %}">
+                    {% if config_status.resend_configured %}Sending Key Ready{% else %}Unconfigured{% endif %}
+                </span>
+            </div>
+
+            <!-- Scheduler -->
+            <div class="flex items-center justify-between p-3 rounded bg-slate-50 border border-slate-200">
+                <div>
+                    <span class="font-bold text-slate-800">APScheduler Background Worker</span>
+                    <p class="text-slate-500 text-[11px]">Cycle: Every {{ config_status.default_polling_interval }} minutes</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold {% if config_status.scheduler_enabled %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-slate-100 text-slate-700{% endif %}">
+                    {% if config_status.scheduler_enabled %}Active{% else %}Disabled{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="mt-4 p-3 bg-blue-50/60 border border-blue-100 rounded text-[11px] text-slate-600 leading-relaxed">
+            <strong>Note on Email Delivery:</strong> Resend test accounts use <code>onboarding@resend.dev</code> to deliver alerts to the registered account email. In-app notifications are always preserved in the database regardless of external email domain verification status.
+        </div>
+    </div>
+
+</div>
+{% endblock %}

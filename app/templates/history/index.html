@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Event History — WorldAmaze{% endblock %}
+{% block header_title %}Event History Archive{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl">
+    
+    <!-- Top Action Bar & Description -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <h2 class="text-xl font-bold tracking-tight text-slate-900">Historical Events Archive</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Chronological record of all intelligence events identified and verified by your watches.</p>
+        </div>
+    </div>
+
+    <!-- Filter & Search Controls -->
+    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+        <form action="/history" method="GET" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div class="sm:col-span-2 relative">
+                <input type="text" name="q" value="{{ search_query or '' }}" placeholder="Search headlines, summaries, entities..."
+                       class="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400"></i>
+            </div>
+
+            <div>
+                <select name="importance" class="w-full text-xs px-2.5 py-1.5 border border-slate-300 rounded-md bg-white">
+                    <option value="">All Importances</option>
+                    <option value="critical" {% if selected_importance == 'critical' %}selected{% endif %}>Critical</option>
+                    <option value="high" {% if selected_importance == 'high' %}selected{% endif %}>High</option>
+                    <option value="medium" {% if selected_importance == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="low" {% if selected_importance == 'low' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+
+            <div class="flex space-x-2">
+                <button type="submit" class="w-full px-3 py-1.5 bg-slate-900 text-xs font-semibold text-white rounded-md hover:bg-slate-800 transition-colors">
+                    Filter
+                </button>
+                <a href="/history" class="px-3 py-1.5 border border-slate-200 text-xs font-medium text-slate-600 rounded-md hover:bg-slate-50 flex items-center justify-center">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Events List -->
+    {% if events and events|length > 0 %}
+    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="divide-y divide-slate-100">
+            {% for ev in events %}
+            <div class="p-5 hover:bg-slate-50/50 transition-colors">
+                <div class="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+                    <div class="flex items-center space-x-2">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold {% if ev.importance in ('critical', 'high') %}bg-red-50 text-red-700 border border-red-200{% else %}bg-slate-100 text-slate-700{% endif %}">
+                            {{ ev.importance.upper() }}
+                        </span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold {% if ev.evidence_status == 'official_confirmed' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
+                            {{ ev.evidence_status.replace('_', ' ').upper() }}
+                        </span>
+                        <span class="text-slate-400 capitalize">• Category: {{ ev.event_category }}</span>
+                    </div>
+                    <span>First detected: {{ ev.first_detected_at.strftime('%b %d, %Y %H:%M UTC') }}</span>
+                </div>
+
+                <h3 class="text-base font-bold text-slate-900 hover:text-blue-600">
+                    <a href="/history/{{ ev.id }}">{{ ev.headline }}</a>
+                </h3>
+
+                <p class="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">
+                    {{ ev.summary }}
+                </p>
+
+                {% if ev.what_changed %}
+                <div class="mt-2 text-[11px] text-slate-700 bg-slate-50 border border-slate-200 p-2 rounded">
+                    <strong>What changed:</strong> {{ ev.what_changed }}
+                </div>
+                {% endif %}
+
+                <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-100 text-xs">
+                    <span class="text-slate-400 text-[11px]">ID: <span class="font-mono">{{ ev.id[:8] }}...</span></span>
+                    <a href="/history/{{ ev.id }}" class="text-blue-600 hover:underline font-semibold flex items-center">
+                        Full Intelligence Dossier &rarr;
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white border border-slate-200 rounded-lg p-12 text-center shadow-sm">
+        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="archive" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-900">No events found</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+            No events match your criteria. When active watches detect qualifying developments, they will be archived here.
+        </p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

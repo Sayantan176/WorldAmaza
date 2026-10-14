@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Overview — WorldAmaze{% endblock %}
+{% block header_title %}Overview Workspace{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-6xl">
+
+    <!-- 1. Prompt Composer -->
+    <div class="bg-white rounded-lg border border-slate-200 shadow-sm p-6 sm:p-7">
+        <div class="max-w-3xl">
+            <h2 class="text-xl font-bold tracking-tight text-slate-900">What do you want WorldAmaze to watch for?</h2>
+            <p class="mt-1 text-sm text-slate-500">Describe the event, change, or condition that matters to you.</p>
+        </div>
+
+        <form id="composerForm" hx-post="/watches/interpret" hx-target="#interpretedRulesContainer" hx-indicator="#interpretSpinner" class="mt-5">
+            <div class="relative">
+                <textarea id="promptComposer" name="prompt" rows="3" required
+                          placeholder="e.g., Track India's fighter aircraft and defence aviation programs. Send immediate alerts for prototype rollouts, first flights, major contracts, production approvals, and cancellations. Put minor developments in a daily digest."
+                          class="block w-full p-3.5 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"></textarea>
+            </div>
+
+            <!-- Example prompt pills -->
+            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <span class="text-slate-400 font-medium">Examples:</span>
+                <button type="button" onclick="fillPrompt('Track India\'s fighter aircraft and defence aviation programs. Send immediate alerts for prototype rollouts, first flights, major contracts, production approvals, and cancellations. Put minor developments in a daily digest.')"
+                        class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+                    Fighter aviation milestones
+                </button>
+                <button type="button" onclick="fillPrompt('Monitor semiconductor export restrictions involving China, Taiwan, India, and the United States. Alert me only when a new restriction is officially announced or takes effect.')"
+                        class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+                    Semiconductor export curbs
+                </button>
+                <button type="button" onclick="fillPrompt('Track major cybersecurity vulnerabilities affecting widely used software. Notify me about actively exploited critical vulnerabilities, but do not send alerts about routine security commentary.')"
+                        class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+                    Critical zero-day exploits
+                </button>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between pt-2">
+                <div class="flex items-center text-xs text-slate-500 space-x-2">
+                    <span class="inline-flex items-center">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 mr-1 text-blue-600"></i>
+                        Parsed with Groq GPT-OSS 120B
+                    </span>
+                    <span>•</span>
+                    <span>Editable rule confirmation</span>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <div id="interpretSpinner" class="htmx-indicator flex items-center text-xs text-blue-600 font-medium">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        Synthesizing rules...
+                    </div>
+                    <button type="submit"
+                            class="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 transition-colors">
+                        <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
+                        Create watch
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Container for dynamically inserted parsed rule confirmation -->
+        <div id="interpretedRulesContainer"></div>
+    </div>
+
+    <!-- 2. Metrics from Real Database Records -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Watches</span>
+                <i data-lucide="radar" class="w-4 h-4 text-slate-400"></i>
+            </div>
+            <div class="mt-2 flex items-baseline">
+                <span class="text-2xl font-bold text-slate-900">{{ metrics.active_watches }}</span>
+                <span class="ml-2 text-xs text-slate-500">of {{ metrics.total_watches }} configured</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Alerts Received</span>
+                <i data-lucide="bell" class="w-4 h-4 text-slate-400"></i>
+            </div>
+            <div class="mt-2 flex items-baseline">
+                <span class="text-2xl font-bold text-slate-900">{{ metrics.total_notifications }}</span>
+                <span class="ml-2 text-xs text-slate-500">all time</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Unread Notifications</span>
+                <i data-lucide="inbox" class="w-4 h-4 text-slate-400"></i>
+            </div>
+            <div class="mt-2 flex items-baseline">
+                <span class="text-2xl font-bold {% if metrics.unread_notifications > 0 %}text-blue-600{% else %}text-slate-900{% endif %}">
+                    {{ metrics.unread_notifications }}
+                </span>
+                <span class="ml-2 text-xs text-slate-500">pending review</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Next Scheduled Digest</span>
+                <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+            </div>
+            <div class="mt-2 flex items-baseline">
+                <span class="text-base font-bold text-slate-900">{{ metrics.next_digest_time or '08:00 (Daily)' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Split: Recent Alerts & Watches -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Recent Alerts -->
+        <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center">
+                    <i data-lucide="bell" class="w-4 h-4 mr-2 text-blue-600"></i>
+                    Recent Alerts
+                </h3>
+                <a href="/notifications" class="text-xs font-semibold text-blue-600 hover:text-blue-700">View inbox &rarr;</a>
+            </div>
+            <div class="p-5 flex-1">
+                {% if recent_notifications and recent_notifications|length > 0 %}
+                <div class="divide-y divide-slate-100">
+                    {% for notif in recent_notifications %}
+                    <div class="py-3 first:pt-0 last:pb-0">
+                        <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                            <span class="font-semibold text-slate-700">{{ notif.watch_title }}</span>
+                            <span>{{ notif.created_at.strftime('%b %d, %H:%M') if notif.created_at else '' }}</span>
+                        </div>
+                        <h4 class="text-sm font-semibold text-slate-900 hover:text-blue-600">
+                            <a href="/history/{{ notif.event_id }}">{{ notif.event_headline }}</a>
+                        </h4>
+                        <p class="text-xs text-slate-600 line-clamp-2 mt-1">{{ notif.event_summary }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                        <i data-lucide="inbox" class="w-5 h-5"></i>
+                    </div>
+                    <p class="text-sm font-medium text-slate-700">No alerts received yet</p>
+                    <p class="text-xs text-slate-500 mt-1">When active watches detect matching verified developments, they appear here.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recently Updated Watches -->
+        <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center">
+                    <i data-lucide="radar" class="w-4 h-4 mr-2 text-slate-700"></i>
+                    Active Watches
+                </h3>
+                <a href="/watches" class="text-xs font-semibold text-blue-600 hover:text-blue-700">Manage all &rarr;</a>
+            </div>
+            <div class="p-5 flex-1">
+                {% if recent_watches and recent_watches|length > 0 %}
+                <div class="divide-y divide-slate-100">
+                    {% for w in recent_watches %}
+                    <div class="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between">
+                        <div class="min-w-0 pr-4">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-2 h-2 rounded-full {% if w.status == 'active' %}bg-emerald-500{% elif w.status == 'paused' %}bg-amber-400{% else %}bg-slate-300{% endif %}"></span>
+                                <h4 class="text-sm font-semibold text-slate-900 truncate">
+                                    <a href="/watches/{{ w.id }}" class="hover:underline">{{ w.title }}</a>
+                                </h4>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-0.5 truncate">{{ w.description }}</p>
+                            <div class="flex items-center space-x-3 mt-1.5 text-[11px] text-slate-400">
+                                <span>Checked: {{ w.last_checked_at.strftime('%H:%M UTC') if w.last_checked_at else 'Pending' }}</span>
+                                <span>•</span>
+                                <span>{{ w.events_count }} events matched</span>
+                            </div>
+                        </div>
+                        <div class="shrink-0 flex items-center space-x-2">
+                            <a href="/watches/{{ w.id }}" class="px-2.5 py-1 text-xs font-medium border border-slate-200 rounded text-slate-700 hover:bg-slate-50">
+                                Open
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                        <i data-lucide="radar" class="w-5 h-5"></i>
+                    </div>
+                    <p class="text-sm font-medium text-slate-700">No watches active</p>
+                    <p class="text-xs text-slate-500 mt-1">Use the composer above to create your first intelligence watch.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 4. Compact Monitoring Status Banner -->
+    <div class="bg-white border border-slate-200 rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-slate-600 gap-3">
+        <div class="flex items-center space-x-3">
+            <span class="flex h-2 w-2 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span class="font-medium text-slate-900">Background Engine Status:</span>
+            <span>Polling active every 30m • GNews API connected • Open RSS feeds fallback ready</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="text-slate-400">AI: Groq GPT-OSS 120B</span>
+            <a href="/settings" class="text-blue-600 hover:underline font-semibold">View system diagnostics &rarr;</a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

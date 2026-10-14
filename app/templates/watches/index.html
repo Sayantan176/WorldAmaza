@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}My Watches — WorldAmaze{% endblock %}
+{% block header_title %}My Watches{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl">
+    
+    <!-- Header with actions & filters -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <h2 class="text-xl font-bold tracking-tight text-slate-900">Intelligence Watches</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Manage and audit your active natural-language surveillance rules.</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="/dashboard" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
+                New Watch
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Tabs & Search -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex space-x-1 border-b border-slate-200 sm:border-b-0">
+            <a href="/watches" class="px-3 py-1.5 text-xs font-semibold rounded-md {% if current_filter == 'all' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                All ({{ counts.all }})
+            </a>
+            <a href="/watches?status=active" class="px-3 py-1.5 text-xs font-semibold rounded-md {% if current_filter == 'active' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                Active ({{ counts.active }})
+            </a>
+            <a href="/watches?status=paused" class="px-3 py-1.5 text-xs font-semibold rounded-md {% if current_filter == 'paused' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                Paused ({{ counts.paused }})
+            </a>
+            <a href="/watches?status=archived" class="px-3 py-1.5 text-xs font-semibold rounded-md {% if current_filter == 'archived' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                Archived ({{ counts.archived }})
+            </a>
+        </div>
+
+        <form action="/watches" method="GET" class="flex items-center max-w-xs w-full">
+            <div class="relative w-full">
+                <input type="text" name="q" value="{{ search_query or '' }}" placeholder="Search watches..."
+                       class="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400"></i>
+            </div>
+        </form>
+    </div>
+
+    <!-- Watches List -->
+    {% if watches and watches|length > 0 %}
+    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="divide-y divide-slate-100">
+            {% for w in watches %}
+            <div class="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center space-x-2.5">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold {% if w.status == 'active' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% elif w.status == 'paused' %}bg-amber-50 text-amber-700 border border-amber-200{% else %}bg-slate-100 text-slate-600 border border-slate-200{% endif %}">
+                            {{ w.status.upper() }}
+                        </span>
+                        <h3 class="text-base font-bold text-slate-900">
+                            <a href="/watches/{{ w.id }}" class="hover:text-blue-600 transition-colors">{{ w.title }}</a>
+                        </h3>
+                    </div>
+
+                    <p class="text-xs text-slate-600 mt-1 line-clamp-2 max-w-3xl">{{ w.description }}</p>
+
+                    <div class="flex flex-wrap items-center gap-y-1 gap-x-4 mt-2.5 text-[11px] text-slate-500">
+                        <span><strong class="text-slate-700">Delivery:</strong> {{ w.delivery_mode.replace('_', ' ').capitalize() }}</span>
+                        <span>•</span>
+                        <span><strong class="text-slate-700">Interval:</strong> Every {{ w.polling_interval_minutes }}m</span>
+                        <span>•</span>
+                        <span><strong class="text-slate-700">Last Checked:</strong> {{ w.last_checked_at.strftime('%b %d, %H:%M UTC') if w.last_checked_at else 'Never' }}</span>
+                        <span>•</span>
+                        <span><strong class="text-slate-700">Matches:</strong> {{ w.events_count }} events</span>
+                    </div>
+
+                    {% if w.last_error %}
+                    <div class="mt-2 text-[11px] text-red-600 bg-red-50 p-1.5 rounded inline-block">
+                        <strong>Last run notice:</strong> {{ w.last_error }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center space-x-2 shrink-0">
+                    <form action="/watches/{{ w.id }}/check" method="POST" class="inline">
+                        <button type="submit" title="Run manual check now"
+                                class="px-3 py-1.5 border border-slate-200 text-xs font-semibold rounded text-slate-700 bg-white hover:bg-slate-100 transition-colors flex items-center">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 mr-1.5 text-slate-500"></i>
+                            Check Now
+                        </button>
+                    </form>
+
+                    {% if w.status == 'active' %}
+                    <form action="/watches/{{ w.id }}/pause" method="POST" class="inline">
+                        <button type="submit" class="px-2.5 py-1.5 border border-slate-200 text-xs font-medium rounded text-slate-600 hover:bg-slate-100">
+                            Pause
+                        </button>
+                    </form>
+                    {% elif w.status == 'paused' %}
+                    <form action="/watches/{{ w.id }}/resume" method="POST" class="inline">
+                        <button type="submit" class="px-2.5 py-1.5 border border-emerald-300 text-xs font-medium rounded text-emerald-700 bg-emerald-50 hover:bg-emerald-100">
+                            Resume
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <a href="/watches/{{ w.id }}" class="px-3 py-1.5 bg-slate-900 text-xs font-semibold rounded text-white hover:bg-slate-800 transition-colors">
+                        Details &rarr;
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white border border-slate-200 rounded-lg p-12 text-center shadow-sm">
+        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="radar" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-900">No watches found</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+            {% if search_query %}
+            No watches matched your query "{{ search_query }}". Try clearing the search filter.
+            {% else %}
+            You have not configured any intelligence watches yet. Create your first watch from the Overview composer.
+            {% endif %}
+        </p>
+        <div class="mt-6">
+            <a href="/dashboard" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                <i data-lucide="plus" class="w-3.5 h-3.5 mr-1.5"></i>
+                Create First Watch
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

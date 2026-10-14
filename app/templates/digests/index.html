@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Intelligence Digests — WorldAmaze{% endblock %}
+{% block header_title %}Intelligence Digests{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-6xl">
+    
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <h2 class="text-xl font-bold tracking-tight text-slate-900">Periodic Digests</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Automated daily and weekly briefings synthesizing your watch developments.</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <form action="/digests/generate" method="POST" class="inline">
+                <input type="hidden" name="period" value="daily">
+                <input type="hidden" name="force_send_email" value="true">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-slate-300 text-xs font-semibold rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50 transition-colors">
+                    <i data-lucide="play" class="w-3.5 h-3.5 mr-1.5 text-blue-600"></i>
+                    Generate & Send Digest Now
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Digest Configuration & Preferences -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center">
+            <i data-lucide="clock" class="w-4 h-4 mr-2 text-blue-600"></i>
+            Digest Delivery Schedule
+        </h3>
+
+        <form action="/settings/digest" method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Frequency</label>
+                <select name="digest_frequency" class="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white">
+                    <option value="daily" {% if current_user.digest_frequency == 'daily' %}selected{% endif %}>Daily Briefing</option>
+                    <option value="weekly" {% if current_user.digest_frequency == 'weekly' %}selected{% endif %}>Weekly Summary</option>
+                    <option value="none" {% if current_user.digest_frequency == 'none' %}selected{% endif %}>Disabled</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Preferred Local Time</label>
+                <input type="text" name="digest_time" value="{{ current_user.digest_time or '08:00' }}" placeholder="08:00"
+                       class="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white">
+            </div>
+
+            <div class="flex items-end">
+                <button type="submit" class="w-full px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded shadow-sm transition-colors">
+                    Save Schedule
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Live Preview of Next Digest -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center">
+                    <i data-lucide="eye" class="w-4 h-4 mr-2 text-emerald-600"></i>
+                    Next Scheduled Digest Preview
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Computed from current database records across your active watches.</p>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+                {{ preview.total_events }} events eligible
+            </span>
+        </div>
+
+        {% if preview.watch_groups and preview.watch_groups|length > 0 %}
+        <div class="space-y-6 pt-2">
+            {% for group in preview.watch_groups %}
+            <div class="border-l-2 border-blue-500 pl-4 py-1">
+                <h4 class="text-sm font-bold text-slate-900 mb-2">Watch: {{ group.watch_title }}</h4>
+                <div class="space-y-3">
+                    {% for ev in group.events %}
+                    <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-md">
+                        <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                            <span class="font-semibold text-slate-700">{{ ev.importance.upper() }} • {{ ev.evidence_status.replace('_', ' ').upper() }}</span>
+                        </div>
+                        <h5 class="text-sm font-bold text-slate-900">{{ ev.headline }}</h5>
+                        <p class="text-xs text-slate-600 mt-1">{{ ev.summary }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-xs text-slate-500">
+            No qualifying events currently pending for your next digest. As watches match incoming reports, they will compile here.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Past Digest History -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center">
+            <i data-lucide="history" class="w-4 h-4 mr-2 text-slate-700"></i>
+            Past Digest Archive
+        </h3>
+
+        {% if past_digests and past_digests|length > 0 %}
+        <div class="divide-y divide-slate-100">
+            {% for d in past_digests %}
+            <div class="py-3.5 flex items-center justify-between">
+                <div>
+                    <h4 class="text-sm font-bold text-slate-900">{{ d.title }}</h4>
+                    <div class="flex items-center space-x-3 text-xs text-slate-500 mt-1">
+                        <span>{{ d.event_count }} events included</span>
+                        <span>•</span>
+                        <span>Generated: {{ d.created_at.strftime('%b %d, %Y %H:%M UTC') }}</span>
+                    </div>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {% if d.email_status == 'delivered' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% elif d.email_status == 'failed' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-slate-100 text-slate-700{% endif %}">
+                        Email: {{ d.email_status.capitalize() }}
+                    </span>
+                    {% if d.email_error %}
+                    <p class="text-[11px] text-red-500 mt-1 max-w-xs truncate" title="{{ d.email_error }}">{{ d.email_error }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-6 text-xs text-slate-500">
+            No past digests generated yet.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

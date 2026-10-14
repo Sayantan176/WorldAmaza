@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications Inbox — WorldAmaze{% endblock %}
+{% block header_title %}Notifications Inbox{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-6xl">
+    
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <h2 class="text-xl font-bold tracking-tight text-slate-900">Intelligence Notifications</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Verified updates and milestone alerts delivered from your watches.</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <form action="/notifications/mark-all-read" method="POST">
+                <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-slate-300 text-xs font-semibold rounded text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm">
+                    <i data-lucide="check-check" class="w-3.5 h-3.5 mr-1.5 text-slate-500"></i>
+                    Mark All as Read
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+        <a href="/notifications" class="px-3 py-1.5 text-xs font-semibold rounded-md {% if current_filter == 'all' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+            All ({{ counts.all }})
+        </a>
+        <a href="/notifications?status=unread" class="px-3 py-1.5 text-xs font-semibold rounded-md {% if current_filter == 'unread' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+            Unread ({{ counts.unread }})
+        </a>
+        <a href="/notifications?importance=critical_high" class="px-3 py-1.5 text-xs font-semibold rounded-md {% if current_filter == 'critical_high' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+            High & Critical Importance
+        </a>
+    </div>
+
+    <!-- Notifications List -->
+    {% if notifications and notifications|length > 0 %}
+    <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="divide-y divide-slate-100">
+            {% for item in notifications %}
+            {% set n = item.notification %}
+            {% set ev = item.event %}
+            {% set w = item.watch %}
+            <div id="notif-{{ n.id }}" class="p-5 flex flex-col gap-3 {% if not n.is_read %}bg-blue-50/20{% endif %} hover:bg-slate-50/60 transition-colors">
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Watch: <a href="/watches/{{ w.id }}" class="hover:underline text-blue-600">{{ w.title }}</a>
+                        </span>
+                        <span>•</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold {% if ev.importance in ('critical', 'high') %}bg-red-50 text-red-700 border border-red-200{% else %}bg-slate-100 text-slate-700{% endif %}">
+                            {{ ev.importance.upper() }}
+                        </span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold {% if ev.evidence_status == 'official_confirmed' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
+                            {{ ev.evidence_status.replace('_', ' ').upper() }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center space-x-3 text-xs text-slate-400">
+                        <span>Detected: {{ ev.first_detected_at.strftime('%b %d, %H:%M UTC') }}</span>
+                        <form action="/notifications/{{ n.id }}/toggle-read" method="POST" class="inline">
+                            <button type="submit" class="text-xs font-medium text-slate-500 hover:text-slate-800 underline">
+                                {% if n.is_read %}Mark unread{% else %}Mark read{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 hover:text-blue-600">
+                        <a href="/history/{{ ev.id }}">{{ ev.headline }}</a>
+                    </h3>
+                    <p class="text-xs text-slate-600 mt-1 line-clamp-3 leading-relaxed">
+                        {{ ev.summary }}
+                    </p>
+                </div>
+
+                {% if ev.what_changed %}
+                <div class="text-[11px] text-slate-700 bg-slate-50 border border-slate-200 p-2 rounded">
+                    <strong>What changed:</strong> {{ ev.what_changed }}
+                </div>
+                {% endif %}
+
+                <!-- Sources & Feedback Row -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                        <span class="text-slate-400 font-semibold">Sources:</span>
+                        {% for src in item.sources %}
+                        <a href="{{ src.url }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline flex items-center">
+                            {{ src.source_name }}
+                            <i data-lucide="external-link" class="w-3 h-3 ml-1 text-slate-400"></i>
+                        </a>
+                        {% endfor %}
+                    </div>
+
+                    <!-- User Feedback controls -->
+                    <div class="flex items-center space-x-1.5 text-xs">
+                        <span class="text-slate-400 mr-1 text-[11px]">Feedback:</span>
+                        <form action="/feedback" method="POST" class="inline">
+                            <input type="hidden" name="watch_id" value="{{ w.id }}">
+                            <input type="hidden" name="event_id" value="{{ ev.id }}">
+                            <input type="hidden" name="notification_id" value="{{ n.id }}">
+                            <input type="hidden" name="feedback_type" value="relevant">
+                            <button type="submit" title="Relevant" class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-600">
+                                Relevant
+                            </button>
+                        </form>
+
+                        <form action="/feedback" method="POST" class="inline">
+                            <input type="hidden" name="watch_id" value="{{ w.id }}">
+                            <input type="hidden" name="event_id" value="{{ ev.id }}">
+                            <input type="hidden" name="notification_id" value="{{ n.id }}">
+                            <input type="hidden" name="feedback_type" value="irrelevant">
+                            <button type="submit" title="Irrelevant" class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 hover:bg-red-100 hover:text-red-800 text-slate-600">
+                                Irrelevant
+                            </button>
+                        </form>
+
+                        <form action="/feedback" method="POST" class="inline">
+                            <input type="hidden" name="watch_id" value="{{ w.id }}">
+                            <input type="hidden" name="event_id" value="{{ ev.id }}">
+                            <input type="hidden" name="notification_id" value="{{ n.id }}">
+                            <input type="hidden" name="feedback_type" value="too_trivial">
+                            <button type="submit" title="Too trivial" class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 hover:bg-amber-100 hover:text-amber-800 text-slate-600">
+                                Too trivial
+                            </button>
+                        </form>
+
+                        <form action="/feedback" method="POST" class="inline">
+                            <input type="hidden" name="watch_id" value="{{ w.id }}">
+                            <input type="hidden" name="event_id" value="{{ ev.id }}">
+                            <input type="hidden" name="notification_id" value="{{ n.id }}">
+                            <input type="hidden" name="feedback_type" value="already_reported">
+                            <button type="submit" title="Already reported" class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-600">
+                                Duplicate
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white border border-slate-200 rounded-lg p-12 text-center shadow-sm">
+        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="bell" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-900">Your inbox is clear</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+            No notifications match your current filter. When new developments meet your criteria, they will appear here.
+        </p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

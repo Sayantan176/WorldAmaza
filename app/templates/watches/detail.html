@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}{{ watch.title }} — WorldAmaze{% endblock %}
+{% block header_title %}Watch Detail: {{ watch.title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-6xl">
+    
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <div class="flex items-center space-x-2.5">
+                <a href="/watches" class="text-xs text-slate-500 hover:text-slate-800 flex items-center">
+                    <i data-lucide="chevron-left" class="w-4 h-4 mr-0.5"></i>
+                    Back to Watches
+                </a>
+                <span class="text-slate-300">•</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold {% if watch.status == 'active' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% elif watch.status == 'paused' %}bg-amber-50 text-amber-700 border border-amber-200{% else %}bg-slate-100 text-slate-600 border border-slate-200{% endif %}">
+                    {{ watch.status.upper() }}
+                </span>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 mt-1">{{ watch.title }}</h1>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <form action="/watches/{{ watch.id }}/check" method="POST" class="inline">
+                <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-slate-300 text-xs font-semibold rounded text-slate-700 bg-white hover:bg-slate-50 shadow-sm">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 mr-1.5 text-slate-500"></i>
+                    Check Now
+                </button>
+            </form>
+
+            {% if watch.status == 'active' %}
+            <form action="/watches/{{ watch.id }}/pause" method="POST" class="inline">
+                <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-slate-300 text-xs font-medium rounded text-slate-700 bg-white hover:bg-slate-50">
+                    <i data-lucide="pause" class="w-3.5 h-3.5 mr-1.5 text-amber-500"></i>
+                    Pause
+                </button>
+            </form>
+            {% elif watch.status == 'paused' %}
+            <form action="/watches/{{ watch.id }}/resume" method="POST" class="inline">
+                <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-emerald-300 text-xs font-medium rounded text-emerald-700 bg-emerald-50 hover:bg-emerald-100">
+                    <i data-lucide="play" class="w-3.5 h-3.5 mr-1.5 text-emerald-600"></i>
+                    Resume
+                </button>
+            </form>
+            {% endif %}
+
+            <form action="/watches/{{ watch.id }}/delete" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this watch?');">
+                <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-red-200 text-xs font-medium rounded text-red-700 bg-red-50 hover:bg-red-100">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5 mr-1.5 text-red-500"></i>
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Original Prompt Box -->
+    <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Natural Language Request</span>
+        <p class="text-sm text-slate-800 mt-1 font-mono bg-slate-50 p-3 rounded border border-slate-100 leading-relaxed">
+            "{{ watch.description }}"
+        </p>
+    </div>
+
+    <!-- Full Monitoring Rules View & Edit -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
+            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center">
+                <i data-lucide="sliders" class="w-4 h-4 mr-2 text-blue-600"></i>
+                Structured Monitoring Specification
+            </h3>
+            <span class="text-xs text-slate-500">Governing AI Matching Engine</span>
+        </div>
+
+        <form action="/watches/{{ watch.id }}/update" method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Watch Title</label>
+                    <input type="text" name="title" value="{{ watch.title }}" required
+                           class="w-full text-sm font-medium px-3 py-2 border border-slate-300 rounded bg-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Subjects (comma-separated)</label>
+                    <input type="text" name="subjects" value="{{ rules.subjects|join(', ') if rules.subjects else '' }}"
+                           class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Include Search Terms</label>
+                    <input type="text" name="include_terms" value="{{ rules.include_terms|join(', ') if rules.include_terms else '' }}"
+                           class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Exclude Noise Terms</label>
+                    <input type="text" name="exclude_terms" value="{{ rules.exclude_terms|join(', ') if rules.exclude_terms else '' }}"
+                           class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Evidence Requirement</label>
+                    <select name="evidence_requirement" class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="official_confirmation" {% if rules.evidence_requirement == 'official_confirmation' %}selected{% endif %}>Official Confirmation</option>
+                        <option value="multiple_sources" {% if rules.evidence_requirement == 'multiple_sources' %}selected{% endif %}>Multiple Sources</option>
+                        <option value="any_report" {% if rules.evidence_requirement == 'any_report' %}selected{% endif %}>Any Report</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Importance Threshold</label>
+                    <select name="importance_threshold" class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="critical" {% if rules.importance_threshold == 'critical' %}selected{% endif %}>Critical Only</option>
+                        <option value="high" {% if rules.importance_threshold == 'high' %}selected{% endif %}>High</option>
+                        <option value="medium" {% if rules.importance_threshold == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="low" {% if rules.importance_threshold == 'low' %}selected{% endif %}>Low</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Uncertainty Policy</label>
+                    <select name="uncertainty_policy" class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="suppress" {% if rules.uncertainty_policy == 'suppress' %}selected{% endif %}>Suppress Rumors</option>
+                        <option value="flag_unverified" {% if rules.uncertainty_policy == 'flag_unverified' %}selected{% endif %}>Flag as Unverified</option>
+                        <option value="allow" {% if rules.uncertainty_policy == 'allow' %}selected{% endif %}>Allow</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Delivery Channel</label>
+                    <select name="delivery_mode" class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="immediate" {% if watch.delivery_mode == 'immediate' %}selected{% endif %}>Immediate Alert</option>
+                        <option value="daily_digest" {% if watch.delivery_mode == 'daily_digest' %}selected{% endif %}>Daily Digest Only</option>
+                        <option value="both" {% if watch.delivery_mode == 'both' %}selected{% endif %}>Both Immediate & Digest</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Polling Interval</label>
+                    <select name="polling_interval_minutes" class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="15" {% if watch.polling_interval_minutes == 15 %}selected{% endif %}>Every 15 minutes</option>
+                        <option value="30" {% if watch.polling_interval_minutes == 30 %}selected{% endif %}>Every 30 minutes</option>
+                        <option value="60" {% if watch.polling_interval_minutes == 60 %}selected{% endif %}>Every 1 hour</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-3 border-t border-slate-100">
+                <button type="submit" class="px-5 py-2 bg-slate-900 text-xs font-semibold text-white rounded hover:bg-slate-800 shadow-sm transition-colors">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Recent Matched Events -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center">
+                <i data-lucide="check-circle" class="w-4 h-4 mr-2 text-emerald-600"></i>
+                Matched Events Audit Trail ({{ matched_events|length }})
+            </h3>
+        </div>
+
+        {% if matched_events and matched_events|length > 0 %}
+        <div class="divide-y divide-slate-100">
+            {% for item in matched_events %}
+            <div class="py-4 first:pt-0 last:pb-0">
+                <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-800">
+                        {{ item.event.importance.upper() }} • {{ item.event.evidence_status.replace('_', ' ').upper() }}
+                    </span>
+                    <span>Detected: {{ item.event.first_detected_at.strftime('%b %d, %Y %H:%M UTC') }}</span>
+                </div>
+                <h4 class="text-base font-bold text-slate-900 hover:text-blue-600 mt-1">
+                    <a href="/history/{{ item.event.id }}">{{ item.event.headline }}</a>
+                </h4>
+                <p class="text-xs text-slate-600 mt-1 line-clamp-2">{{ item.event.summary }}</p>
+                <div class="mt-2 text-[11px] text-slate-500 bg-slate-50 p-2 rounded">
+                    <strong>Match rationale:</strong> {{ item.match.match_rationale }} (Decision: {{ item.match.decision }})
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-xs text-slate-500">
+            No developments have matched this watch yet. Click "Check Now" or wait for the scheduled background cycle.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Feedback Associated with Watch -->
+    {% if feedbacks and feedbacks|length > 0 %}
+    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Feedback History</h3>
+        <div class="divide-y divide-slate-100 text-xs">
+            {% for f in feedbacks %}
+            <div class="py-2.5 flex items-center justify-between">
+                <span class="font-semibold text-slate-700 capitalize">{{ f.feedback_type.replace('_', ' ') }}</span>
+                <span class="text-slate-400">{{ f.created_at.strftime('%b %d, %H:%M') }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

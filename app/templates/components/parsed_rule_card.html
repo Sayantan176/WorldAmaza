@@ -1,0 +1,153 @@
+<div id="ruleConfirmationContainer" class="bg-white border-2 border-blue-500 rounded-lg p-6 shadow-md my-6 transition-all">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200 mb-6">
+        <div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 mb-1">
+                Rule Synthesis by Groq GPT-OSS 120B
+            </span>
+            <h2 class="text-xl font-bold text-slate-900">Review & Confirm Watch Specification</h2>
+            <p class="text-xs text-slate-500">Fine-tune your monitoring criteria before activating continuous surveillance.</p>
+        </div>
+        <button type="button" onclick="document.getElementById('ruleConfirmationContainer').remove()" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <form action="/watches" method="POST" class="space-y-6">
+        <!-- Hidden description holding original prompt -->
+        <input type="hidden" name="description" value="{{ rules.description }}">
+
+        <!-- 1. What to monitor -->
+        <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center">
+                <i data-lucide="crosshair" class="w-4 h-4 mr-1.5 text-blue-600"></i>
+                1. What to Monitor
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Watch Title</label>
+                    <input type="text" name="title" value="{{ rules.title }}" required
+                           class="w-full text-sm font-medium px-3 py-2 border border-slate-300 rounded bg-white focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Subjects & Entities (comma-separated)</label>
+                    <input type="text" name="subjects" value="{{ rules.subjects|join(', ') }}" required
+                           class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <div class="mt-3">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Search Keywords (include terms, comma-separated)</label>
+                <input type="text" name="include_terms" value="{{ rules.include_terms|join(', ') }}"
+                       class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white focus:ring-blue-500 focus:border-blue-500">
+            </div>
+        </div>
+
+        <!-- 2. What counts as a significant event & what to ignore -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
+                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 mr-1.5 text-emerald-600"></i>
+                    2. Specific Trigger Conditions
+                </h3>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Developments that trigger alerts (one per line or comma-separated)</label>
+                <textarea name="trigger_conditions" rows="3"
+                          class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white focus:ring-blue-500 focus:border-blue-500">{{ rules.trigger_conditions|join('\n') }}</textarea>
+                
+                <div class="mt-3">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Event Categories (comma-separated)</label>
+                    <input type="text" name="event_categories" value="{{ rules.event_categories|join(', ') }}"
+                           class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
+                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center">
+                    <i data-lucide="ban" class="w-4 h-4 mr-1.5 text-red-600"></i>
+                    3. What to Ignore (Noise Filtering)
+                </h3>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Exclusion terms / noise to suppress (comma-separated)</label>
+                <textarea name="exclude_terms" rows="3"
+                          class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white focus:ring-blue-500 focus:border-blue-500">{{ rules.exclude_terms|join(', ') }}</textarea>
+                <p class="text-[11px] text-slate-500 mt-2">Articles matching these terms will be eliminated before analysis.</p>
+            </div>
+        </div>
+
+        <!-- 3. Evidence Required & Verification Policy -->
+        <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center">
+                <i data-lucide="shield" class="w-4 h-4 mr-1.5 text-indigo-600"></i>
+                4. Evidence & Uncertainty Policy
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Evidence Required</label>
+                    <select name="evidence_requirement" class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="official_confirmation" {% if rules.evidence_requirement == 'official_confirmation' %}selected{% endif %}>Official Confirmation (Gov / Agency / Corp)</option>
+                        <option value="multiple_sources" {% if rules.evidence_requirement == 'multiple_sources' %}selected{% endif %}>Multiple Independent Outlets</option>
+                        <option value="any_report" {% if rules.evidence_requirement == 'any_report' %}selected{% endif %}>Any Credible Report (Early Detection)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Uncertainty / Rumor Handling</label>
+                    <select name="uncertainty_policy" class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="suppress" {% if rules.uncertainty_policy == 'suppress' %}selected{% endif %}>Suppress Unverified / Rumors</option>
+                        <option value="flag_unverified" {% if rules.uncertainty_policy == 'flag_unverified' %}selected{% endif %}>Flag as Unverified (Review Only)</option>
+                        <option value="allow" {% if rules.uncertainty_policy == 'allow' %}selected{% endif %}>Allow with Confidence Tags</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Minimum Importance Threshold</label>
+                    <select name="importance_threshold" class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="critical" {% if rules.importance_threshold == 'critical' %}selected{% endif %}>Critical Only (Major breakthroughs / emergencies)</option>
+                        <option value="high" {% if rules.importance_threshold == 'high' %}selected{% endif %}>High (Significant contracts / approvals)</option>
+                        <option value="medium" {% if rules.importance_threshold == 'medium' %}selected{% endif %}>Medium (All notable developments)</option>
+                        <option value="low" {% if rules.importance_threshold == 'low' %}selected{% endif %}>Low (Minor updates included)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Delivery & Schedule -->
+        <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center">
+                <i data-lucide="send" class="w-4 h-4 mr-1.5 text-blue-600"></i>
+                5. When & How to Notify Me
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Delivery Channel</label>
+                    <select name="delivery_mode" class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="immediate" {% if rules.delivery_mode == 'immediate' %}selected{% endif %}>Immediate Alert for Major Developments</option>
+                        <option value="daily_digest" {% if rules.delivery_mode == 'daily_digest' %}selected{% endif %}>Daily Intelligence Digest Only</option>
+                        <option value="both" {% if rules.delivery_mode == 'both' %}selected{% endif %}>Both (Immediate for Critical, Digest for Minor)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Check Frequency (Polling)</label>
+                    <select name="polling_interval_minutes" class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="15">Every 15 minutes</option>
+                        <option value="30" selected>Every 30 minutes (Standard)</option>
+                        <option value="60">Every 1 hour</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Preferred Digest Delivery Time</label>
+                    <input type="text" name="digest_time" value="{{ rules.digest_time or '08:00' }}" placeholder="08:00"
+                           class="w-full text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit actions -->
+        <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
+            <button type="button" onclick="document.getElementById('ruleConfirmationContainer').remove()"
+                    class="px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 transition-colors">
+                Discard
+            </button>
+            <button type="submit"
+                    class="inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+                <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                Save & Activate Watch
+            </button>
+        </div>
+    </form>
+</div>
